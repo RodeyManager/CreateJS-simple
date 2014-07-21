@@ -70,10 +70,10 @@ function setBackground(evt){
 	//创建按钮
 	startShape = createStartBtn();
 	startBtnCon.addChild(startShape);
-	//侦听开始事件
-	startShape.addEventListener('click', startGame);
 
 	stage.addChild(bitmap, bgBlur, startBtnCon);
+	//侦听开始事件
+	startShape.addEventListener('click', startGame);
 	stage.update();
 }
 
@@ -157,6 +157,25 @@ function stop(evt){
 	stage.update();
 }
 
+function shipPong(evt){
+	console.log(evt.currentTarget)
+	var target = evt.currentTarget;
+	var index = target.name.match(/\d/)[0];
+	shipCon.removeChild(evt.currentTarget);
+	var ship = createShip(index);
+	resetBitShip(ship);
+	ships[index] = ship;
+	shipCon.addChild(ship);
+	scoeTotal += scoeStep;
+	scoeTxt.text = '总分： ' + scoeTotal;
+	if(scoeTotal >= 2000){
+		scoeTxt.color = '#D76433';
+	}else if(scoeTxt >= 5000){
+		scoeTxt.color = '#E81741';
+	}
+	//stage.update();
+}
+
 
 function createBlur(){
 	//创建遮罩
@@ -193,28 +212,6 @@ function resetBitShip(ship){
 	ship.y = y;
 	ship.mouseEnabled = true;
 }
-
-function shipPong(evt){
-	console.log(evt.currentTarget)
-	var target = evt.currentTarget;
-	var index = target.name.match(/\d/)[0];
-	shipCon.removeChild(evt.currentTarget);
-	var ship = createShip(index);
-	resetBitShip(ship);
-	ships[index] = ship;
-	shipCon.addChild(ship);
-	scoeTotal += scoeStep;
-	scoeTxt.text = '总分： ' + scoeTotal;
-	if(scoeTotal >= 2000){
-		scoeTxt.color = '#D76433';
-	}else if(scoeTxt >= 5000){
-		scoeTxt.color = '#E81741';
-	}
-	//stage.update();
-}
-
-
-
 
 
 function createTxt(txt, style, color, x, y){
