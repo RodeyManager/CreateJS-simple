@@ -1,40 +1,42 @@
 var CJS = createjs,
-	cw, ch,
-	stage,
-	bgBlur,
-	bg,
-	image,
-	startShape,
-	radiusStep = 10,
-	shipNum = 5,
-	ships = [],
+	cw, ch,				//屏幕尺寸
+	stage,				//舞台
+	bgBlur,				//遮罩层
+	bg,					//背景层
+	image,				
+	startShape, 		//开始按钮
+	radiusStep = 10,	//按钮圆角大小
+	shipNum = 5,		//默认战斗机数据
+	ships = [],			//战斗机数组
 	temp = [],
 
-	startBtnCon,
-	startGameTXT,
+	startBtnCon,		//开始容器
+	startGameTXT,		//开始文本
 
-	ship,
-	shipCon,
+	ship, 				//战斗机
+	shipCon,			//找都记容器
 
-	scoeTotal = 0,
-	scoeStep = 100,
-	scoeTxt,
+	scoeTotal = 0,		//总分
+	scoeStep = 100,		//摧毁一个的的份
+	scoeTxt,			//的份文本
 
-	startTime,
-	endTime,
-	timeSprite,
-	timeSpriteHeight = 5;
+	startTime,			//开始计时
+	endTime,			//介绍记时
+	timeSprite,			//计时块
+	timeSpriteHeight = 5; //计时块高度
 
 window.onload = function(){
 
 	cw = window.innerWidth;
 	ch = window.innerHeight;
 
+	//获取画图板
 	var canvas = document.getElementById('canvas');
 	canvas.width = cw;
 	canvas.height = ch;
 	//console.log(cw, ch)
 
+	//创建舞台
 	stage = new CJS.Stage('canvas');
 	CJS.Touch.enable(stage);
 	stage.enableMouseOver(10); 
@@ -52,6 +54,10 @@ window.onload = function(){
 
 };
 
+/**
+ * 设置背景
+ * @param {[type]} evt [description]
+ */
 function setBackground(evt){
 	var bitmap = new CJS.Bitmap(bg);
 	bitmap.width = cw;
@@ -103,28 +109,14 @@ function startGame(evt){
 	stage.update();
 }
 
-function createShips(){
-	shipCon = new CJS.Container();
-	stage.addChild(shipCon);
-	ships = [];
-	var i = 0;
-	var len = shipNum;
 
-	for(; i < len; ++i){
-		createShip(i);
-		//bitship.addEventListener('tick', shipMove);
-	}
 
-	CJS.Ticker.addEventListener("tick", tick);
-	CJS.Ticker.setFPS(60);
 
-	/*setTimeout(function(){
-		CJS.Ticker.removeEventListener('tick', tick);
-	}, 8000);*/
-
-	stage.update();
-}
-
+/**
+ * 开始动画
+ * @param  {[type]} evt [description]
+ * @return {[type]}     [description]
+ */
 function tick(evt){
 	var len = ships.length;
 	
@@ -149,6 +141,11 @@ function tick(evt){
 	}
 }
 
+/**
+ * 停止动画
+ * @param  {[type]} evt [description]
+ * @return {[type]}     [description]
+ */
 function stop(evt){
 	CJS.Ticker.removeEventListener('tick', tick);
 	stage.removeChild(shipCon);
@@ -157,6 +154,11 @@ function stop(evt){
 	stage.update();
 }
 
+/**
+ * 摧毁战斗机
+ * @param  {[type]} evt [description]
+ * @return {[type]}     [description]
+ */
 function shipPong(evt){
 	console.log(evt.currentTarget)
 	var target = evt.currentTarget;
@@ -177,8 +179,11 @@ function shipPong(evt){
 }
 
 
+/**
+ * 创建遮罩
+ * @return {[type]} [description]
+ */
 function createBlur(){
-	//创建遮罩
 	var bgBlur = new CJS.Bitmap(bg);
 	bgBlur.filters = [new CJS.BlurFilter(20, 20, 10)];
 	bgBlur.cache(0, 0, cw, ch);
@@ -191,6 +196,11 @@ function createBlur(){
 	return bgBlur;
 }
 
+/**
+ * 创建单个战斗机
+ * @param  {[type]} index [description]
+ * @return {[type]}       [description]
+ */
 function createShip(index){
 	var bitship = new CJS.Bitmap(ship);
 	bitship.name = '_bitship_' + index;
@@ -204,6 +214,37 @@ function createShip(index){
 	return bitship;
 }
 
+/**
+ * 创建战斗机组
+ * @return {[type]} [description]
+ */
+function createShips(){
+	shipCon = new CJS.Container();
+	stage.addChild(shipCon);
+	ships = [];
+	var i = 0;
+	var len = shipNum;
+
+	for(; i < len; ++i){
+		createShip(i);
+		//bitship.addEventListener('tick', shipMove);
+	}
+
+	CJS.Ticker.addEventListener("tick", tick);
+	CJS.Ticker.setFPS(60);
+
+	/*setTimeout(function(){
+		CJS.Ticker.removeEventListener('tick', tick);
+	}, 8000);*/
+
+	stage.update();
+}
+
+/**
+ * 重置战斗机位置
+ * @param  {[type]} ship [description]
+ * @return {[type]}      [description]
+ */
 function resetBitShip(ship){
 	var x = Math.random() * cw + 20;
 	var y = ch + Math.random() * 500;
@@ -213,7 +254,15 @@ function resetBitShip(ship){
 	ship.mouseEnabled = true;
 }
 
-
+/**
+ * 创建文本
+ * @param  {[type]} txt   [文本内容]
+ * @param  {[type]} style [样式]
+ * @param  {[type]} color [颜色]
+ * @param  {[type]} x     [初始水平位置]
+ * @param  {[type]} y     [初始垂直位置]
+ * @return {[type]}       [description]
+ */
 function createTxt(txt, style, color, x, y){
 	var txt = new CJS.Text(txt || "开始游戏", style || "bold 36px Arial", color || "#FFFFFF"); 
 	txt.textBaseline = "alphabetic";
@@ -225,6 +274,10 @@ function createTxt(txt, style, color, x, y){
 	return txt;
 }
 
+/**
+ * 创建开始按钮
+ * @return {[type]} [description]
+ */
 function createStartBtn(){
 	var mc = new CJS.Container();
 	mc.name = '_mc';
@@ -243,6 +296,10 @@ function createStartBtn(){
 	return mc;
 }
 
+/**
+ * 创建计时块
+ * @return {[type]} [description]
+ */
 function createTimeSprite(){
 	var mc = new CJS.Container();
 	mc.x = 0;
