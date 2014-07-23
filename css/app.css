@@ -9,7 +9,7 @@
 }
 body {
     font-family: Arial "Microsoft YaHei";
-    background: white;
+    background: #001517;
     -webkit-user-select:none;
     -webkit-text-size-adjust:none;
     width:100%;
@@ -35,4 +35,6 @@ a:hover{text-decoration: none; color: #555;}
 a:link{text-decoration: none; color: #555;}
 .clear{ clear: both; }
 
-#canvas{}
+#canvas{
+    background: #001517;
+}
