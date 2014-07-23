@@ -13,6 +13,17 @@
 <body>
 	<canvas id="canvas"></canvas>
 
+	<div id="gameSettingBtn" class="setting-btn"></div>
+	<div id="gameSettingCon" class="setting-con">
+		<h3>游戏设置</h3>
+		<p>
+			<label>背景音效：</label>
+			<input type="range" id="bgVolum" value="0.8" min="0" max="1.0" step="0.1">
+			<i id="bgVolumValue">80</i>
+		</p>
+		<span id="closeSettingBtn">X</span>
+	</div>
+
 	<!-- 载入js -->
 	<script type="text/javascript" src="js/createjs-2013.12.12.min.js"></script>
 	<script type="text/javascript" src="js/gameInit.js"></script>
