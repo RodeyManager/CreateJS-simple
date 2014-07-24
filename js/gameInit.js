@@ -201,10 +201,14 @@ function handleProgress(evt){
 	stage.update();
 }
 
+/**
+ * 音效控制函数
+ * @param  {[type]} name [音效ID]
+ * @return {[type]}      [description]
+ */
 function playSound(name){
     return CJS.Sound.play(name);
 }
-
 function stopSound(name){
 	return CJS.Sound.stop(name);
 }
@@ -263,6 +267,7 @@ function startGame(evt){
 	scoeTxt.x = (cw - scoeTxt.lineWidth) * .5;*/
 	stage.addChild(scoeTxt);
 
+	//创建战斗机
 	createShips(shipNum); 
 
 	startTime = Date.now || new Date().getTime();
@@ -281,7 +286,7 @@ function startGame(evt){
 	CJS.Ticker.addEventListener("tick", tick);
 	CJS.Ticker.setFPS(60);
 	CJS.Ticker.timingMode = CJS.Ticker.RAF;
-
+	//移出开始按钮事件侦听
 	startShape.removeEventListener('click', startGame);
 
 	stage.update();
@@ -361,7 +366,7 @@ function gameAgain(){
 	//出现再来一次
 	bgBlur = createBlur();
 	stage.addChild(bgBlur);
-
+	//是否重玩标记
 	isOverrider = true;
 
 	//创建文本
@@ -429,6 +434,10 @@ function resetGlobal(){
 	scoeTxt = null;
 }
 
+/**
+ * 清理舞台
+ * @return {[type]} [description]
+ */
 function clearStage(){
 	stage.removeChild(shipCon);
 	stage.removeChild(scoeTxt);
@@ -623,7 +632,6 @@ function createBomb(x, y){
 	var data = new CJS.SpriteSheet({
 			"images": [queue.getResult("bombImage")],
 			"frames": {"regX": 30, "height": 120, "count": 19, "regY": 30, "width": 120},
-			// define two animations, run (loops, 1.5x speed) and jump (returns to run):
 			"animations": {"run": [0, 19, "run", .5]}
 		});
 	bomb = new CJS.Sprite(data, "run");
@@ -634,7 +642,12 @@ function createBomb(x, y){
 	stage.addChild(bomb);
 	stage.update();
 }
-
+/**
+ * 时间燃烧效果
+ * @param  {[type]} x [description]
+ * @param  {[type]} y [description]
+ * @return {[type]}   [description]
+ */
 function createTimeSheet(x, y){
 	var data = new CJS.SpriteSheet({
 			"images": [queue.getResult("timeImage")],
