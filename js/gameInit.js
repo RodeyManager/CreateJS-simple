@@ -333,7 +333,7 @@ function tick(evt){
 			shapeTime.scaleX -= 0.0003;
 		else
 			shapeTime.scaleX -= 0.0005;*/
-		shapeTime.scaleX -= 0.0003;
+		shapeTime.scaleX -= timeStep;
 		timeSheet.x = shapeTime.scaleX * cw - 10;
 	}
 	//console.log('ships.length = ' + ships.length)
