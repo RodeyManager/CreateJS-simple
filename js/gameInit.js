@@ -22,12 +22,20 @@ var CJS = createjs,
 
 	ship, 				//战斗机
 	shipCon,			//找都记容器
-	bomb, 				//爆炸
+	bomb, 				//爆炸物
+	f20_mc, 			//主机
+	f20, 				//F20歼机
+	bulletImg, 			//子弹图片
+	bullet, 			//子弹对象
+	bullets = [],		//存放子弹
+	cst = null,			//定时发射子弹
+	bultIndex = -1,		//索引
 
 	bgVolum = 0.8, 		//背景音效大小
 	settingCon, 		//设置面板
 	setBgVolumBtn, 		//游戏音效音量
 	gameSettingBtn, 	//设置按钮
+	bgVolumValue, 		//音效音量显示大小
 
 	scoeTotal = 0,		//总分
 	scoeStep = 100,		//摧毁一个的的份
@@ -85,13 +93,18 @@ window.onload = function(){
 	CJS.Ticker.timingMode = CJS.Ticker.RAF;
 
 	//游戏设置
-	settingCon = document.getElementById('gameSettingCon');
-	setBgVolumBtn = document.getElementById('bgVolum');
-	gameSettingBtn = document.getElementById('gameSettingBtn');
+	settingCon 			= document.getElementById('gameSettingCon');
+	setBgVolumBtn 		= document.getElementById('bgVolum');
+	gameSettingBtn 		= document.getElementById('gameSettingBtn');
+	bgVolumValue 		= document.getElementById('bgVolumValue');
 	var closeSettingBtn = document.getElementById('closeSettingBtn');
+	bgVolumValue.innerText = parseInt(bgVolum * 100) + '';;
 	gameSettingBtn.addEventListener('touchend', gameSetting);
 	closeSettingBtn.addEventListener('touchend', closeSetting);
 	setBgVolumBtn.addEventListener('change', setBgVolum);
+	//保证PC可用
+	// gameSettingBtn.addEventListener('click', gameSetting);
+	// closeSettingBtn.addEventListener('click', closeSetting);
 
 };
 
@@ -130,8 +143,8 @@ function showHideSettingCon(flag){
 }
 function setBgVolum(evt){
 	var value = evt.target.value;
-	document.getElementById('bgVolumValue').innerText = parseInt(value * 100) + '';
-	bgVolum = value;
+	bgVolum = Number(value);
+	bgVolumValue.innerText = parseInt(bgVolum * 100) + '';
 }
 
 /**
@@ -142,13 +155,15 @@ function loadQueues(){
 	//加载音乐
 	//var item = {src: musicPath + "18-machinae_supremacy-lord_krutors_dominion.ogg", id: "music"};
 	var manifest = [
-		{id: 'bgMusic', src: musicPath + "18-machinae_supremacy-lord_krutors_dominion.ogg"},
-		{id: 'breakMusic', src: musicPath + "Game-Break.ogg"},
-		{id: 'startMusic', src: musicPath + "Game-Start.ogg"},
-		{id: 'bgImage', src: imagePath + "bg.jpg"},
-		{id: 'shipImage', src: imagePath + "ship.png"},
-		{id: 'bombImage', src: imagePath + "bomb.png"},
-		{id: 'timeImage', src: imagePath + "timeSprite.png"}
+		{id: 'bgMusic', 	src: musicPath + "18-machinae_supremacy-lord_krutors_dominion.ogg"},
+		{id: 'breakMusic', 	src: musicPath + "Game-Break.ogg"},
+		{id: 'startMusic', 	src: musicPath + "Game-Start.ogg"},
+		{id: 'bgImage', 	src: imagePath + "bg.jpg"},
+		{id: 'shipImage', 	src: imagePath + "ship.png"},
+		{id: 'bombImage', 	src: imagePath + "bomb.png"},
+		{id: 'timeImage', 	src: imagePath + "timeSprite.png"},
+		{id: 'F20', 		src: imagePath + 'F20.png'},
+		{id: 'Bullet', 		src: imagePath + 'Bullet.png'}
 	];
 	// Instantiate a queue.
     queue = new CJS.LoadQueue();
@@ -186,6 +201,8 @@ function loadComplete(evt) {
 	if(bg){
 		setTimeout('setBackground()', 300);
 	}
+	f20 = queue.getResult('F20');
+	bulletImg = queue.getResult('Bullet');
 }
 
 function fileComplete(evt){}
@@ -254,18 +271,21 @@ function startGame(evt){
 	
 	//重置全局参数
 	resetGlobal();
+
+	//隐藏设置
+	gameSettingBtn.style.display = 'none';
 	
 	//清理舞台
-	gameSettingBtn.style.display = 'none';
 	stage.removeChild(startBtnCon);
 	stage.removeChild(bgBlur);
 	stage.update();
 
 	//创建分数文本
 	scoeTxt = createTxt('总分： ' + scoeTotal, 'bold 1.0em Arial', '#FFFFFF', 0, 30, 'right');
-	/*scoeTxt.lineWidth = cw;
-	scoeTxt.x = (cw - scoeTxt.lineWidth) * .5;*/
 	stage.addChild(scoeTxt);
+
+	//创建主机
+	//createF20();
 
 	//创建战斗机
 	createShips(shipNum); 
@@ -307,6 +327,11 @@ function tick(evt){
 	//}
 	if(speed > 6.5) speed = 6.5;
 
+	//子弹发射
+	/*for(var i = 0; i < bullets.length; i++){
+		bullets[i].y -= speed;
+	}*/
+
 	//控制战斗机移动
 	var len = ships.length;
 	if(len > 0){
@@ -316,9 +341,12 @@ function tick(evt){
 			if(ships[i]){
 				if(ships[i].y < -120){
 					ships[i].y = ch + Math.random() * 500;
+					//ships[i].y = -Math.random() * 500;
 				}
 				ships[i].y -= Math.floor(Math.random() + speed);
+				//ships[i].y += Math.floor(Math.random() + speed);
 			}
+			
 			stage.update();
 		}
 		//console.log(speed)
@@ -353,6 +381,8 @@ function stop(){
 	clearStage();
 	//移出音效
 	stopSound('bgMusic');
+	//清楚子弹发射
+	//clearInterval(cst);
 	//再来一次
 	gameAgain();
 	
@@ -398,18 +428,16 @@ function shipPong(evt){
 	resetBitShip(ship);
 	ships[index] = ship;
 	shipCon.addChild(ship);
+	//得分控制
 	scoeTotal += scoeStep;
 	scoeTxt.text = '总分： ' + scoeTotal;
-	if(scoeTotal >= 2000){
-		scoeTxt.color = '#D76433';
-	}else if(scoeTxt >= 5000){
-		scoeTxt.color = '#E81741';
+	if(scoeTotal >= 5000){
+		scoeTxt.color = 'rgba(24, 174, 180, .8)';
+	}else if(scoeTotal >= 10000){
+		scoeTxt.color = 'rgba(243, 69, 14, .8)';
 	}
-	//加速------------
-	//speed += vy;
 	//播放爆炸声
 	var breakMusic = playSound('breakMusic');
-
 	//创建爆炸Sprite
 	stage.removeChild(bomb);
 	bomb = null;
@@ -443,11 +471,14 @@ function clearStage(){
 	stage.removeChild(scoeTxt);
 	stage.removeChild(timeSprite);
 	stage.removeChild(bomb);
+	stage.removeChild(f20_mc);
 	timeSprite.removeChild(timeSheet);
 	shipCon = null;
 	scoeTxt = null;
 	timeSprite = null;
 	bomb = null;
+	//显示设置
+	gameSettingBtn.style.display = 'block';
 	stage.update();
 }
 
@@ -460,10 +491,12 @@ function createBlur(){
 	bgBlur.filters = [new CJS.BlurFilter(20, 20, 10)];
 	bgBlur.cache(0, 0, cw, ch);
 	bgBlur.alpha = 0.9;
-	bgBlur.width = cw;
-	bgBlur.height = ch;
+	bgBlur.width = bgBlur.image.width * (cw / bgBlur.image.width );
+	bgBlur.height = bgBlur.image.height * (ch / bgBlur.image.height );
 	bgBlur.x = 0;
 	bgBlur.y = 0;
+	bgBlur.scaleX = (cw / bgBlur.image.width);
+	bgBlur.scaleY = (ch / bgBlur.image.height);
 	bgBlur.name = '_bgBlur';
 	return bgBlur;
 }
@@ -516,6 +549,7 @@ function resetBitShip(ship){
 	var h = ship.image.height;
 	var x = w * .5 + Math.random() * (cw - w);
 	var y = ch + Math.random() * 500;
+	//var y = - Math.random() * 500;
 	//if(x > cw) x = Math.random() * cw / 2 + 20;
 	ship.x = x;
 	ship.y = y;
@@ -615,7 +649,7 @@ function createTimeSprite(){
 	mc.x = 0;
 	mc.y = 0;
 	var shapeBG = new CJS.Shape(new CJS.Graphics().beginFill('rgba(255, 255, 255, .5').drawRect(0, 0, cw, timeSpriteHeight));
-	var shapeTime = new CJS.Shape(new CJS.Graphics().beginFill('rgba(255, 4, 84, .8)').drawRect(0, 0, cw, timeSpriteHeight));
+	var shapeTime = new CJS.Shape(new CJS.Graphics().beginFill('rgba(243, 69, 14, .8)').drawRect(0, 0, cw, timeSpriteHeight));
 	shapeTime.name = '_shapeTime';
 	createTimeSheet(cw, -18);
 	mc.addChild(shapeBG, shapeTime, timeSheet);
@@ -661,3 +695,103 @@ function createTimeSheet(x, y){
 	stage.update();
 	//return timeSheet;
 }
+
+/**
+ * 创建F20歼灭机
+ * @return {[type]} [description]
+ */
+function createF20(){
+	f20_mc = new CJS.Container();
+	f20_mc.name = '_f20_mc';
+	f20 = new CJS.Bitmap(queue.getResult('F20'));
+	f20.name = '_f20';
+	f20.x = (cw - f20.image.width) * .5;
+	f20.y = ch - f20.image.height;
+	console.log(f20)
+	/*bulletBmp = createBullet();
+	bulletBmp.x = f20Bm.x + (f20Bm.image.width - bulletBmp.image.width ) * .5;
+	bulletBmp.y = f20Bm.y - bulletBmp.image.height;*/
+	f20_mc.addChild(f20);
+	//子弹发射
+	setInterval('createBullet()', 1000);
+	stage.addEventListener('stagemousedown', stageMouseDown);
+	stage.addEventListener('stagemouseup', stageMouseUp);
+	stage.addChild(f20_mc);
+	stage.update();
+}
+
+function stageMouseDown(evt){
+	//console.log(evt);
+	stage.addEventListener('stagemousemove', stageMouseMove);
+}
+function stageMouseMove(evt){
+	//console.log(evt);
+	f20.x = evt.stageX - f20.image.width * .5;
+	f20.y = evt.stageY - f20.image.height * .5;
+}
+function stageMouseUp(evt){
+	//console.log(evt);
+	stage.removeEventListener('stagemousemove', stageMouseMove);
+}
+
+
+/**
+ * 创建子弹
+ * @param  {[type]} x [description]
+ * @param  {[type]} y [description]
+ * @return {[type]}   [description]
+ */
+function createBullet(x, y){
+	bultIndex++;
+	var bult = new CJS.Bitmap(queue.getResult('Bullet'));
+	bult.name = '_bullet_' + bultIndex;
+	//bult.x = x || 0;
+	//bult.y = y || 0;
+	bult.x = f20.x + (f20.image.width - bult.image.width ) * .5;
+	bult.y = f20.y - bult.image.height * .5;
+	bullets.push(bult);
+	f20_mc.addChild(bult);
+	stage.update();
+	return bult;
+	/*for(var i = 0; i < 2; i++){
+		var bult = new CJS.Bitmap('Bullet');
+		bult.x = x || 0;
+		bult.y = y || 0;
+		bullets.push(bult);
+	}*/
+	
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
