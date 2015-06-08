@@ -7,7 +7,7 @@
  */
 
 
-var canvas, ctx;
+var canvas, ctx, rws, rhs;
 var shapes = [
     [
         {"x": 0,"y": 0},{"x": 176,"y": 0},{"x": 216,"y": 97},{"x": 0,"y": 106}
@@ -28,12 +28,22 @@ var shapes = [
         {"x": 0,"y": 695},{"x": 400,"y": 575},{"x": 400,"y": 800},{"x": 0,"y": 800}
     ]
 ];
-var listCache = [];
 
 window.onload = function(){
 
+    var cw = document.documentElement.clientWidth || document.body.clientWidth;
+    var ch = document.documentElement.clientHeight || document.body.clientHeight;
+
     canvas = document.querySelector('#canvas');
     ctx = canvas.getContext('2d');
+
+    console.log(canvas.width, canvas.height);
+    rws = cw / parseInt(canvas.width, 10);
+    rhs = ch / parseInt(canvas.height, 10);
+    console.log(rws, rhs);
+
+    canvas.width = canvas.width * rws;
+    canvas.height = canvas.height * rhs;
 
     for(var i = 0, len = shapes.length; i < len; ++i){
         createShape(shapes[i], null);
@@ -67,11 +77,11 @@ function createShape(shape, evt, index){
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(spposes[0].x, spposes[0].y);
+    ctx.moveTo(spposes[0].x * rws, spposes[0].y * rhs);
     for(var i = 1, len = spposes.length; i < len; ++i){
-        ctx.lineTo(spposes[i].x, spposes[i].y);
+        ctx.lineTo(spposes[i].x * rws, spposes[i].y * rhs);
     }
-    ctx.lineTo(spposes[0].x, spposes[0].y);
+    ctx.lineTo(spposes[0].x * rws, spposes[0].y * rhs);
     ctx.fill();
     ctx.stroke();
     ctx.closePath();
